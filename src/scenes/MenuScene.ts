@@ -1,10 +1,8 @@
 import Phaser from 'phaser';
-import { GAME_CONFIG } from '../config';
 import { getHighScore } from '../utils/storage';
 import { SoundManager } from '../utils/sound';
 
 export class MenuScene extends Phaser.Scene {
-  private highScoreText!: Phaser.GameObjects.Text;
   private spaceKeyListener?: () => void;
   private soundManager!: SoundManager;
 
@@ -43,7 +41,7 @@ export class MenuScene extends Phaser.Scene {
 
     // High score display
     const highScore = getHighScore();
-    this.highScoreText = this.add.text(width / 2, height / 2 - 20, `High Score: ${highScore}`, {
+    this.add.text(width / 2, height / 2 - 20, `High Score: ${highScore}`, {
       fontSize: '24px',
       color: '#ffd700',
       fontFamily: 'Arial'
