@@ -8,10 +8,7 @@ interface GameOverData {
 }
 
 export class GameOverScene extends Phaser.Scene {
-  private spaceKeyListener?: () => void;
-  private canReturnToMenu: boolean = false;
   private countdownText!: Phaser.GameObjects.Text;
-  private menuText!: Phaser.GameObjects.Text;
   private soundManager!: SoundManager;
 
   constructor() {
@@ -29,14 +26,6 @@ export class GameOverScene extends Phaser.Scene {
     this.soundManager.init(false); // Don't include startScreen music in game over scene
     this.soundManager.resumeAudioContext();
     this.soundManager.play('gameOver');
-
-    // Reset flag
-    this.canReturnToMenu = false;
-
-    // Remove any existing listeners
-    if (this.spaceKeyListener && this.input.keyboard) {
-      this.input.keyboard.off('keydown-SPACE', this.spaceKeyListener);
-    }
 
     // Game Over text
     this.add.text(width / 2, height / 2 - 120, 'GAME OVER', {
@@ -70,19 +59,12 @@ export class GameOverScene extends Phaser.Scene {
       }).setOrigin(0.5);
     }
 
-    // Countdown text (initially hidden)
+    // Countdown text
     this.countdownText = this.add.text(width / 2, height / 2 + 140, 'Please wait...', {
       fontSize: '20px',
       color: '#888',
       fontFamily: 'Arial'
     }).setOrigin(0.5);
-
-    // Return to menu text (initially hidden)
-    this.menuText = this.add.text(width / 2, height / 2 + 140, 'Press SPACE to Return to Menu', {
-      fontSize: '24px',
-      color: '#4ecdc4',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5).setAlpha(0);
 
     // Start countdown timer (3 seconds)
     let countdown = 3;
@@ -92,33 +74,12 @@ export class GameOverScene extends Phaser.Scene {
         countdown--;
         this.time.delayedCall(1000, updateCountdown);
       } else {
-        // Countdown finished, show menu text and enable return
-        this.countdownText.setAlpha(0);
-        this.menuText.setAlpha(1);
-        this.canReturnToMenu = true;
-
-        // Blinking effect for menu text
-        this.tweens.add({
-          targets: this.menuText,
-          alpha: 0.3,
-          duration: 800,
-          yoyo: true,
-          repeat: -1
-        });
+        // Countdown finished, automatically return to menu
+        this.scene.start('MenuScene');
       }
     };
 
     this.time.delayedCall(1000, updateCountdown);
-
-    // Return to menu on space key (only after countdown)
-    if (this.input.keyboard) {
-      this.spaceKeyListener = () => {
-        if (this.canReturnToMenu) {
-          this.scene.start('MenuScene');
-        }
-      };
-      this.input.keyboard.on('keydown-SPACE', this.spaceKeyListener);
-    }
   }
 }
 

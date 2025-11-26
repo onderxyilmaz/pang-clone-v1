@@ -22,8 +22,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    // Move to menu scene after boot
-    this.scene.start('MenuScene');
+    // Move to splash scene after boot
+    this.scene.start('SplashScene');
   }
 }
 

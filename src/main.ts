@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
+import { SplashScene } from './scenes/SplashScene';
 import { MenuScene } from './scenes/MenuScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -11,14 +12,18 @@ const config: Phaser.Types.Core.GameConfig = {
   height: GAME_CONFIG.height,
   parent: 'game-container',
   backgroundColor: GAME_CONFIG.backgroundColor,
+  audio: {
+    disableWebAudio: false,
+    noAudio: false
+  },
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: GAME_CONFIG.ball.gravity },
-      debug: false // Set to true temporarily to debug collision issues
+      debug: false
     }
   },
-  scene: [BootScene, MenuScene, GameScene, GameOverScene]
+  scene: [BootScene, SplashScene, MenuScene, GameScene, GameOverScene]
 };
 
 new Phaser.Game(config);

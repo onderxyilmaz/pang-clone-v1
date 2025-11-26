@@ -12,22 +12,27 @@ export class SoundManager {
   }
 
   // Resume AudioContext after user interaction
-  resumeAudioContext() {
-    if (this.audioContextResumed) return;
+  resumeAudioContext(): Promise<void> {
+    if (this.audioContextResumed) {
+      return Promise.resolve();
+    }
     
     const sound = this.scene.sound;
     if (sound && (sound as any).context) {
       const context = (sound as any).context;
       if (context.state === 'suspended') {
-        context.resume().then(() => {
+        return context.resume().then(() => {
           this.audioContextResumed = true;
         }).catch(() => {
-          // Ignore errors
+          // Ignore errors but still mark as attempted
+          this.audioContextResumed = true;
         });
       } else {
         this.audioContextResumed = true;
+        return Promise.resolve();
       }
     }
+    return Promise.resolve();
   }
 
   // Initialize sounds from loaded audio files
@@ -60,19 +65,24 @@ export class SoundManager {
   play(soundName: string) {
     if (!this.enabled) return;
     
-    // Resume AudioContext if needed
-    this.resumeAudioContext();
-    
     const sound = this.sounds.get(soundName);
-    if (sound && sound instanceof Phaser.Sound.WebAudioSound) {
+    if (!sound || !(sound instanceof Phaser.Sound.WebAudioSound)) {
+      return;
+    }
+    
+    // If sound is already playing, don't play again
+    if (sound.isPlaying) {
+      return;
+    }
+    
+    // Resume AudioContext first, then play sound
+    this.resumeAudioContext().then(() => {
       try {
-        // If sound is already playing, don't play again
-        if (sound.isPlaying) {
-          return;
+        if (!sound.isPlaying) {
+          sound.play();
         }
-        sound.play();
       } catch (e) {
-        // If play fails, try again after a short delay (AudioContext might need time)
+        // If play fails, try again after a short delay
         console.warn(`Failed to play sound ${soundName}, retrying...`, e);
         this.scene.time.delayedCall(100, () => {
           try {
@@ -84,7 +94,16 @@ export class SoundManager {
           }
         });
       }
-    }
+    }).catch(() => {
+      // AudioContext resume failed, try to play anyway
+      try {
+        if (!sound.isPlaying) {
+          sound.play();
+        }
+      } catch (e) {
+        console.error(`Failed to play sound ${soundName}`, e);
+      }
+    });
   }
 
   stop(soundName: string) {
